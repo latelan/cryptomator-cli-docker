@@ -3,6 +3,7 @@ name: Check for New Release
 on:
   schedule:
     - cron: "05 00 * * *" # 每天凌晨 12:05 运行一次
+  workflow_dispatch:
 
 jobs:
   check-release:
