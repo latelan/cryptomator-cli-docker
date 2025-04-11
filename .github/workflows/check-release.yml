@@ -1,0 +1,50 @@
+name: Check for New Release
+
+on:
+  schedule:
+    - cron: "05 00 * * *" # 每天凌晨 12:05 运行一次
+
+jobs:
+  check-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: 获取 cryptomator/cli 的最新 Release 信息
+      - name: Fetch Latest Release
+        id: fetch_release
+        run: |
+          latest_release=$(curl -s https://api.github.com/repos/cryptomator/cli/releases/latest | jq -r '.tag_name')
+          echo "Latest release: $latest_release"
+          echo "::set-output name=latest_release::$latest_release"
+
+      # Step 2: 比较是否有新 Release
+      - name: Compare Release
+        id: compare_release
+        run: |
+          echo "latest_release=${{ steps.fetch_release.outputs.latest_release }}" >> $GITHUB_ENV
+          if [ "${{ steps.fetch_release.outputs.latest_release }}" == "$(cat .last-release 2>/dev/null)" ]; then
+            echo "No new release found."
+            exit 0
+          fi
+          echo "${{ steps.fetch_release.outputs.latest_release }}" > .last-release
+
+      # Step 3: 触发 Docker 构建工作流
+      - name: Trigger Docker Build Workflow
+        if: success() # 如果有新 Release，则触发构建流程
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.actions.createWorkflowDispatch({
+              owner: 'latelan',
+              repo: 'cryptomator-cli-docker',
+              workflow_id: 'docker-build.yml',
+              ref: 'main',
+              inputs: {
+                release_tag: process.env.latest_release
+              }
+            })
+
+      # Step 4: 保存上次检查的 Release 信息
+      - name: Save Last Release
+        if: success()
+        run: echo "${{ steps.fetch_release.outputs.latest_release }}" > .last-release
