@@ -43,6 +43,7 @@ jobs:
                 release_tag: process.env.latest_release
               }
             })
+          secret: PERSONAL_ACCESS_TOKEN
 
       # Step 4: 保存上次检查的 Release 信息
       - name: Save Last Release
