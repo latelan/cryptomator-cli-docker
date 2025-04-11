@@ -2,8 +2,12 @@ name: Check for New Release
 
 on:
   schedule:
-    - cron: "05 0 * * 0" # 每天凌晨 12:00 运行一次
+    - cron: "05 0 * * 0" # 每周天凌晨 12:05 运行一次
   workflow_dispatch: # 添加手动触发支持
+
+permissions:
+  actions: write  
+  contents: read   
 
 jobs:
   check-release:
