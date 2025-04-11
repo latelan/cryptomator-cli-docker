@@ -11,10 +11,6 @@ jobs:
   build-and-push:
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        platform: [linux-aarch64, linux-x64] # 定义支持的目标平台
-
     steps:
       # Step 1: 检出代码
       - name: Checkout code
@@ -29,10 +25,10 @@ jobs:
             exit 1
           fi
 
-      # Step 3: 下载指定平台的 cryptomator-cli ZIP 文件
+      # Step 3: 下载 cryptomator-cli ZIP 文件（只下载 linux-x64 版本）
       - name: Download Release ZIP
         run: |
-          wget -O cryptomator-cli.zip https://github.com/cryptomator/cli/releases/download/${{ github.event.inputs.release_tag }}/cryptomator-cli-${{ github.event.inputs.release_tag }}-${{ matrix.platform }}.zip
+          wget -O cryptomator-cli.zip https://github.com/cryptomator/cli/releases/download/${{ github.event.inputs.release_tag }}/cryptomator-cli-${{ github.event.inputs.release_tag }}-linux-x64.zip
 
       # Step 4: 解压 ZIP 文件
       - name: Extract ZIP File
@@ -65,5 +61,5 @@ jobs:
           push: true
           platforms: linux/amd64,linux/arm64
           tags: |
-            latelan/cryptomator-cli:${{ github.event.inputs.release_tag }}-${{ matrix.platform }}
-            latelan/cryptomator-cli:latest-${{ matrix.platform }}
+            latelan/cryptomator-cli:${{ github.event.inputs.release_tag }}
+            latelan/cryptomator-cli:latest
