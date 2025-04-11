@@ -33,6 +33,7 @@ jobs:
         if: success() # 如果有新 Release，则触发构建流程
         uses: actions/github-script@v6
         with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             github.rest.actions.createWorkflowDispatch({
               owner: 'latelan',
@@ -43,7 +44,6 @@ jobs:
                 release_tag: process.env.latest_release
               }
             })
-          secret: PERSONAL_ACCESS_TOKEN
 
       # Step 4: 保存上次检查的 Release 信息
       - name: Save Last Release
