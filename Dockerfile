@@ -8,7 +8,7 @@ WORKDIR /app
 COPY cryptomator-cli /app/
 
 # 设置入口点
-ENTRYPOINT ["java", "-jar", "/app/cryptomator-cli/cryptomator-cli.jar"]
+ENTRYPOINT ["/app/cryptomator-cli/cryptomator-cli/bin/cryptomator-cli"]
 
 # 设置默认命令
 CMD ["--help"]
