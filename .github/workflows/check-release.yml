@@ -2,8 +2,8 @@ name: Check for New Release
 
 on:
   schedule:
-    - cron: "05 00 * * *" # 每天凌晨 12:05 运行一次
-  workflow_dispatch:
+    - cron: "05 0 * * 0" # 每天凌晨 12:00 运行一次
+  workflow_dispatch: # 添加手动触发支持
 
 jobs:
   check-release:
@@ -16,18 +16,17 @@ jobs:
         run: |
           latest_release=$(curl -s https://api.github.com/repos/cryptomator/cli/releases/latest | jq -r '.tag_name')
           echo "Latest release: $latest_release"
-          echo "::set-output name=latest_release::$latest_release"
+          echo "latest_release=$latest_release" >> $GITHUB_ENV
 
       # Step 2: 比较是否有新 Release
       - name: Compare Release
         id: compare_release
         run: |
-          echo "latest_release=${{ steps.fetch_release.outputs.latest_release }}" >> $GITHUB_ENV
-          if [ "${{ steps.fetch_release.outputs.latest_release }}" == "$(cat .last-release 2>/dev/null)" ]; then
+          if [ "${{ env.latest_release }}" == "$(cat .last-release 2>/dev/null)" ]; then
             echo "No new release found."
             exit 0
           fi
-          echo "${{ steps.fetch_release.outputs.latest_release }}" > .last-release
+          echo "${{ env.latest_release }}" > .last-release
 
       # Step 3: 触发 Docker 构建工作流
       - name: Trigger Docker Build Workflow
@@ -48,4 +47,4 @@ jobs:
       # Step 4: 保存上次检查的 Release 信息
       - name: Save Last Release
         if: success()
-        run: echo "${{ steps.fetch_release.outputs.latest_release }}" > .last-release
+        run: echo "${{ env.latest_release }}" > .last-release
