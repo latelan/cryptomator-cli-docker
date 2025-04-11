@@ -1,0 +1,57 @@
+name: Build and Push Docker Image
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "The tag of the latest release"
+        required: true
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: 检出代码
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive  # 初始化子模块
+
+      # Step 2: 更新子模块到指定 Release 版本
+      - name: Update Submodule to Release
+        run: |
+          cd cryptomator-cli
+          git fetch --tags
+          git checkout ${{ github.event.inputs.release_tag }}
+          cd ..
+          git add cryptomator-cli
+          git commit -m "Update submodule to ${{ github.event.inputs.release_tag }}"
+          git push origin main
+
+      # Step 3: 设置 QEMU 支持多平台构建
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+        with:
+          platforms: all
+
+      # Step 4: 设置 Buildx
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      # Step 5: 登录 DockerHub
+        # 确保已在 Settings > Secrets 中添加 DOCKER_USERNAME 和 DOCKER_PASSWORD
+      - name: Login to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      # Step 6: 构建并推送 Docker 镜像
+      - name: Build and Push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: latelan/cryptomator-cli:latest, latelan/cryptomator-cli:${{ github.event.inputs.release_tag }}
