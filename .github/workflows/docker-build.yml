@@ -30,10 +30,6 @@ jobs:
           cd cryptomator-cli
           git fetch --tags
           git checkout ${{ github.event.inputs.release_tag }}
-          cd ..
-          git add cryptomator-cli
-          git commit -m "Update submodule to ${{ github.event.inputs.release_tag }}"
-          git push origin main
 
       # Step 4: 设置 QEMU 支持多平台构建
       - name: Set up QEMU
