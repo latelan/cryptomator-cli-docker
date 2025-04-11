@@ -18,9 +18,10 @@ jobs:
       - name: Fetch Latest Release
         id: fetch_release
         run: |
-          latest_release=$(curl -s https://api.github.com/repos/cryptomator/cryptomator-cli/releases/latest | jq -r '.tag_name')
+          latest_release=$(curl -s https://api.github.com/repos/cryptomator/cli/releases/latest | jq -r '.tag_name')
           echo "Latest release: $latest_release"
           echo "latest_release=$latest_release" >> $GITHUB_ENV
+          echo "Latest release fetched: $latest_release"
 
       # Step 2: 比较是否有新 Release
       - name: Compare Release
@@ -45,7 +46,7 @@ jobs:
               workflow_id: 'docker-build.yml',
               ref: 'main',
               inputs: {
-                release_tag: process.env.latest_release
+                release_tag: '${{ env.latest_release }}'
               }
             })
 
