@@ -1,0 +1,3 @@
+[submodule "cryptomator-cli"]
+	path = cryptomator-cli
+	url = https://github.com/cryptomator/cli.git
