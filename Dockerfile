@@ -12,8 +12,9 @@ RUN apt-get update && apt-get install -y wget unzip && \
       "arm64") echo "linux-aarch64" ;; \
       *) echo "unsupported-arch" ;; \
     esac) && \
+    # 精确拼接下载地址
     wget -O /tmp/cli.zip \
-      "https://github.com/cryptomator/cli/download/${RELEASE_TAG}/cryptomator-cli-${RELEASE_TAG}-${ARCH_SUFFIX}.zip" && \
+      "https://github.com/cryptomator/cli/releases/download/${RELEASE_TAG}/cryptomator-cli-${RELEASE_TAG}-${ARCH_SUFFIX}.zip" && \
     unzip /tmp/cli.zip -d /app && \
     rm /tmp/cli.zip && \
     apt-get purge -y wget unzip && \
