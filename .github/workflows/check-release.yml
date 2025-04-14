@@ -78,8 +78,9 @@ jobs:
       - name: Compare Release
         id: compare
         run: |
-          echo "LAST_RELEASE=${{ steps.read_comment.outputs.result }}" >> $GITHUB_ENV
-          if [ "${{ env.latest_release }}" == "${{ env.LAST_RELEASE }}" ]; then
+          last_release="${{ steps.read_comment.outputs.result }}"
+          echo "LAST_RELEASE=${{ last_release }}" >> $GITHUB_ENV
+          if [ "${{ env.latest_release }}" == "${{ last_release }}" ]; then
             echo "No new release found."
             exit 0
           fi
