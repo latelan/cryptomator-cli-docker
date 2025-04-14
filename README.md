@@ -6,7 +6,7 @@
 
 ## Project Overview
 
-This project creates a Docker image for the [cryptomator/cli](https://github.com/cryptomator/cli) tool, allowing you to use Cryptomator’s command-line functionalities within a containerized environment. With this image, you can encrypt/decrypt files and integrate secure encryption operations into your automated workflows.
+This project creates a Docker image for the [cryptomator/cli](https://github.com/cryptomator/cli) tool, allowing you to use Cryptomator’s command-line functionalities within a containerized environment. 
 
 **Note:**
 - The upstream [cryptomator/cli](https://github.com/cryptomator/cli) source code and its binaries are distributed under the [GPLv3 license](https://github.com/cryptomator/cli/blob/develop/LICENSE.txt).
