@@ -2,40 +2,91 @@ name: Check for New Release
 
 on:
   schedule:
-    - cron: "05 0 * * 0" # 每周天凌晨 12:05 运行一次
-  workflow_dispatch: # 添加手动触发支持
+    - cron: "05 0 * * 0" # 每周日凌晨 12:05
+  workflow_dispatch:
 
 permissions:
-  actions: write  
-  contents: read   
+  actions: write
+  contents: read
+  issues: write  # 必须启用，确保有权限读写 Issue
 
 jobs:
   check-release:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: 获取 cryptomator-cli 的最新 Release 信息
       - name: Fetch Latest Release
         id: fetch_release
         run: |
           latest_release=$(curl -s https://api.github.com/repos/cryptomator/cli/releases/latest | jq -r '.tag_name')
-          echo "Latest release: $latest_release"
           echo "latest_release=$latest_release" >> $GITHUB_ENV
-          echo "Latest release fetched: $latest_release"
+          echo "Latest release: $latest_release"
 
-      # Step 2: 比较是否有新 Release
+      - name: Find or Create Tracking Issue
+        id: issue
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          result-encoding: string
+          script: |
+            const title = "Latest Release Tracker";
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+
+            // 尝试查找已存在的 Issue
+            const issues = await github.rest.issues.listForRepo({
+              owner,
+              repo,
+              state: "open",
+              per_page: 100
+            });
+
+            let issue = issues.data.find(i => i.title === title);
+
+            // 如果没有，就新建一个
+            if (!issue) {
+              const created = await github.rest.issues.create({
+                owner,
+                repo,
+                title,
+                body: "This issue is used by GitHub Actions to track the last fetched release."
+              });
+              issue = created.data;
+            }
+
+            return issue.number;
+
+      - name: Read Last Release from Comment
+        id: read_comment
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          result-encoding: string
+          script: |
+            const issue_number = Number('${{ steps.issue.outputs.result }}');
+            const comments = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number,
+              per_page: 100
+            });
+
+            const lastComment = comments.data.reverse().find(c => c.body.startsWith("Last Release:"));
+            const last_release = lastComment ? lastComment.body.split(":")[1].trim() : "";
+            return last_release;
+
       - name: Compare Release
-        id: compare_release
+        id: compare
         run: |
-          if [ "${{ env.latest_release }}" == "$(cat .last-release 2>/dev/null)" ]; then
+          echo "LAST_RELEASE=${{ steps.read_comment.outputs.result }}" >> $GITHUB_ENV
+          if [ "${{ env.latest_release }}" == "${{ env.LAST_RELEASE }}" ]; then
             echo "No new release found."
             exit 0
           fi
-          echo "${{ env.latest_release }}" > .last-release
+          echo "New release detected: ${{ env.latest_release }}"
 
-      # Step 3: 触发 Docker 构建工作流
       - name: Trigger Docker Build Workflow
-        if: success() # 如果有新 Release，则触发构建流程
+        if: success()
         uses: actions/github-script@v6
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -48,9 +99,18 @@ jobs:
               inputs: {
                 release_tag: '${{ env.latest_release }}'
               }
-            })
+            });
 
-      # Step 4: 保存上次检查的 Release 信息
-      - name: Save Last Release
+      - name: Update Tracking Comment
         if: success()
-        run: echo "${{ env.latest_release }}" > .last-release
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const issue_number = Number('${{ steps.issue.outputs.result }}');
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number,
+              body: `Last Release: ${{ env.latest_release }}`
+            });
