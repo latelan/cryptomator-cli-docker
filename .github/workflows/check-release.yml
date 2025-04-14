@@ -81,7 +81,7 @@ jobs:
           last_release=$(echo "${{ steps.read_comment.outputs.result }}" | xargs)
           if [ "${{ env.latest_release }}" == "$last_release" ]; then
             echo "No new release found."
-            exit 0
+            exit 1
           fi
           echo "New release detected: ${{ env.latest_release }}"
 
