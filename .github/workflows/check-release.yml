@@ -81,12 +81,14 @@ jobs:
           last_release=$(echo "${{ steps.read_comment.outputs.result }}" | xargs)
           if [ "${{ env.latest_release }}" == "$last_release" ]; then
             echo "No new release found."
-            exit 1
+            echo "should_continue=false" >> $GITHUB_ENV
+            exit 0
           fi
           echo "New release detected: ${{ env.latest_release }}"
+          echo "should_continue=true" >> $GITHUB_ENV
 
       - name: Trigger Docker Build Workflow
-        if: success()
+        if: env.should_continue == 'true'
         uses: actions/github-script@v6
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -102,7 +104,7 @@ jobs:
             });
 
       - name: Update Tracking Comment
-        if: success()
+        if: env.should_continue == 'true'
         uses: actions/github-script@v6
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
