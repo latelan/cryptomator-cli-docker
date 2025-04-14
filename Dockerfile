@@ -3,6 +3,7 @@ FROM debian:bullseye-slim
 
 # 设置构建参数
 ARG TARGETARCH
+ARG RELEASE_TAG
 
 # 设置工作目录
 WORKDIR /app
